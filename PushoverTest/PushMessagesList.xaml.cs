@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PushoverTest.PushOver;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,35 +14,31 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace PushoverTest
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class PushMessagesList : Page
     {
         private PushOver.PushOver pushOver;
-
-        public MainPage()
+        public PushMessagesList()
         {
             this.InitializeComponent();
             pushOver = new PushOver.PushOver();
+            this.LoadMessages();
         }
 
-        private async void submitLogin_Click(object sender, RoutedEventArgs e)
+        private async void LoadMessages()
         {
-            if (usernameBox.Text.Length != 0 && passwordBox.Password.Length != 0)
+            var messageList = await pushOver.RetrieveCurrentMessagesAsync();
+            foreach (Message message in messageList.messages)
             {
-                if (await pushOver.RequestUserInfoAsync(usernameBox.Text, passwordBox.Password))
-                {
-                    if (await pushOver.RegisterDeviceAsync())
-                    {
-                        this.Frame.Navigate(typeof(PushMessagesList), null);
-                    }
-                }
+                this.listView.Items.Add(message);
             }
+
         }
     }
 }
