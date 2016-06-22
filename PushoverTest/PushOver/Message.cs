@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PushoverTest.PushOver
 {
-    class Message
+    public class Message
     {
         public int id { get; set; }
         public string message { get; set; }

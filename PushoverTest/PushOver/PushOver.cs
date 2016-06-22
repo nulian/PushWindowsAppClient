@@ -15,10 +15,12 @@ namespace PushoverTest.PushOver
     {
         private const string PUSH_OVER_URL = "https://api.pushover.net/1/";
         private Windows.Storage.ApplicationDataContainer localSettings;
+        private MessageStore messageStore;
 
         public PushOver()
         {
             localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            messageStore = new MessageStore();
         }
 
         public async Task<bool> RequestUserInfoAsync(string username, string password)
@@ -61,7 +63,7 @@ namespace PushoverTest.PushOver
                     var formContent = new FormUrlEncodedContent(new[]
                     {
                         new KeyValuePair<string, string>("secret", ((string)localSettings.Values["secret"])),
-                        new KeyValuePair<string, string>("name", deviceName),
+                        new KeyValuePair<string, string>("name", Guid.NewGuid().ToString("n").Substring(0, 8)),
                         new KeyValuePair<string, string>("os", "O")
                     });
 
@@ -91,6 +93,30 @@ namespace PushoverTest.PushOver
                 var userData = JsonConvert.DeserializeObject<Messages>(responseString);
                 return userData;
             }
+        }
+
+        public async Task<bool> DeleteMessagesTillLastSeen()
+        {
+            using (var client = new HttpClient())
+            {
+                var values = new Dictionary<string, string>
+                {
+                    { "secret", (string)localSettings.Values["secret"] },
+                    { "message", "0" }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+
+                var response = await client.PostAsync(PUSH_OVER_URL + "devices/" + (string)localSettings.Values["device_id"] + "/update_highest_message.json", content);
+
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                Dictionary<string, string> responseCollection = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);
+
+                
+                return Int32.Parse(responseCollection["status"]) == 1; ;
+            }
+
         }
 
         private void StoreUserData(Dictionary<string, string> userData)

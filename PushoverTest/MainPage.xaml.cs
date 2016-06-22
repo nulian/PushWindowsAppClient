@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PushoverTest.PushOver;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace PushoverTest
 
         public MainPage()
         {
+           
             this.InitializeComponent();
             pushOver = new PushOver.PushOver();
         }
@@ -38,6 +40,9 @@ namespace PushoverTest
                 {
                     if (await pushOver.RegisterDeviceAsync())
                     {
+                        var messageList = await pushOver.RetrieveCurrentMessagesAsync();
+                        var messageStore = new MessageStore();
+                        await messageStore.StoreMessages(messageList.messages);
                         this.Frame.Navigate(typeof(PushMessagesList), null);
                     }
                 }

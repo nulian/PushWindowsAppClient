@@ -1,6 +1,7 @@
 ﻿using PushoverTest.PushOver;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -24,20 +25,32 @@ namespace PushoverTest
     public sealed partial class PushMessagesList : Page
     {
         private PushOver.PushOver pushOver;
+        private MessageStore messageStore;
+        private ObservableCollection<Message> messageList;
+        public ObservableCollection<Message> MessageList { get { return this.messageList; } }
+        private SocketHandler socketHandler;
         public PushMessagesList()
         {
+            socketHandler = new SocketHandler(this);
             this.InitializeComponent();
-            pushOver = new PushOver.PushOver();
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            messageStore = new MessageStore();
             this.LoadMessages();
+            pushOver = new PushOver.PushOver();
+            // socketHandler.InitializeConnection();
+            // socketHandler.startConnectionAsync();
+            //socketHandler.OnConnect();
         }
 
         private async void LoadMessages()
         {
-            var messageList = await pushOver.RetrieveCurrentMessagesAsync();
-            foreach (Message message in messageList.messages)
-            {
-                this.listView.Items.Add(message);
-            }
+            messageList = new ObservableCollection<Message>(await messageStore.ReadStoredMessagesAsync());
+            await socketHandler.ConnectAsync();
+            await socketHandler.SendAsync();
+
 
         }
     }
